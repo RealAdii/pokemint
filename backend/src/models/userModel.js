@@ -1,10 +1,10 @@
 import db from "../config/firestore.js";
 
-async function addUser(userData) {
-  await db.collection("users").doc().set(userData);
+async function addUser(userId, userData) {
+  await db.collection("users").doc(userId).set(userData, { merge: true });
 }
 
-async function getUser(userId) {
+async function getUserDetails(userId) {
   const userDoc = await db.collection("users").doc(userId).get();
   if (!userDoc.exists) {
     throw new Error("User not found");
@@ -16,4 +16,4 @@ async function updateUser(userId, updateData) {
   await db.collection("users").doc(userId).update(updateData);
 }
 
-export { addUser, getUser, updateUser };
+export { addUser, getUserDetails, updateUser };

@@ -1,10 +1,11 @@
 // src/store/useStore.js
-import create from "zustand";
+import { create } from "zustand";
 
 const userStore = create((set) => ({
   user: null,
-  setUser: (user) => set(() => ({ user })),
-  updateUser: (user) => set((state) => ({ user: { ...state.user, ...user } })),
+  setUserDetails: (user) => set(() => ({ user })),
+  updateUserDetails: (user) =>
+    set((state) => ({ user: { ...state.user, ...user } })),
 }));
 
 export default userStore;

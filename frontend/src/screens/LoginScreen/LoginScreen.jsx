@@ -1,17 +1,30 @@
 import { useEffect, useState } from "react";
 import { DynamicWidget, useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { BACKEND_API_URL } from "../../utils/constants";
+import userStore from "../../store/userStore";
 
 const LoginScreen = () => {
   const { user } = useDynamicContext();
-  const [userData, setUserData] = useState(null);
+  //   const {
+  //     user: userData,
+  //     setUser,
+  //     updateUser,
+  //   } = userStore((state) => ({
+  //     user: state.user,
+  //     setUser: state.setUser,
+  //     updateUser: state.updateUser,
+  //   }));
+
   const [loading, setLoading] = useState(false);
 
   console.log({ user });
 
   useEffect(() => {
     if (user) {
-      setUserData(user);
+      //   setUser(user);
+      if (user?.newUser) {
+        registerUser(user);
+      }
     }
   }, [user]);
 
@@ -22,23 +35,25 @@ const LoginScreen = () => {
         firstName: userData?.firstName || "",
         lastName: userData?.lastName || "",
         email: userData?.email || "",
-        userId: userData?.id || "",
-        defaultWallet:
+        userId: userData?.userId || "",
+        defaultWalletAddress:
           userData?.verifiedCredentials[0]?.address ||
           userData?.verifiedCredentials[1]?.address ||
           "",
       };
 
       console.log({ payload });
-      return;
 
-      const response = await fetch(`${BACKEND_API_URL}/user`, {
+      const response = await fetch(`${BACKEND_API_URL}/users/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
       });
+
+      const result = await response.json();
+      console.log({ result });
     } catch (error) {
       console.log({ error });
     } finally {

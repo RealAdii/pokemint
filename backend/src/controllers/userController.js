@@ -1,12 +1,14 @@
-import { addUser, getUser as _getUser } from "../models/userModel.js";
+import { addUser, getUserDetails } from "../models/userModel.js";
 
 export async function createUser(req, res) {
   try {
-    const { firstName, lastName, email, defaultWalletAddress } = req.body;
+    const { firstName, lastName, email, defaultWalletAddress, userId } =
+      req.body;
     const userPayload = {
       firstName: firstName || "",
       lastName: lastName || "",
       email: email || "",
+      userId: userId || "",
       walletAddresses: [defaultWalletAddress],
       coinsCollectedTotal: 0,
       coinsCollectedDetails: [],
@@ -16,11 +18,22 @@ export async function createUser(req, res) {
       createdAt: Date.now(),
     };
 
-    await addUser(userPayload);
+    const existingUser = await getUserDetails(userId);
+    if (existingUser) {
+      return res.status(201).send({
+        success: true,
+        message: "User already exists",
+        userData: existingUser,
+      });
+    }
+
+    await addUser(userId, userPayload);
+    const userData = await getUserDetails(userId);
+
     console.log("User created successfully");
-    res
+    return res
       .status(201)
-      .send({ success: true, message: "User created successfully" });
+      .send({ success: true, message: "User created successfully", userData });
   } catch (error) {
     console.error(error);
     res.status(500).send({ success: false, error: error.message });
