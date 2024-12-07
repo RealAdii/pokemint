@@ -1,30 +1,24 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { DynamicWidget, useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { BACKEND_API_URL } from "../../utils/constants";
-import userStore from "../../store/userStore";
+import styles from "./LoginScreen.module.css";
 
-const LoginScreen = () => {
-  const { user } = useDynamicContext();
-  //   const {
-  //     user: userData,
-  //     setUser,
-  //     updateUser,
-  //   } = userStore((state) => ({
-  //     user: state.user,
-  //     setUser: state.setUser,
-  //     updateUser: state.updateUser,
-  //   }));
-
+const LoginScreen = ({ userData, setUserData }) => {
   const [loading, setLoading] = useState(false);
+  const { user } = useDynamicContext();
 
-  console.log({ user });
+  const navigate = useNavigate();
 
+  console.log({ userData });
   useEffect(() => {
     if (user) {
-      //   setUser(user);
+      setUserData(user);
       if (user?.newUser) {
         registerUser(user);
       }
+
+      navigate("/find-coin");
     }
   }, [user]);
 
@@ -62,7 +56,8 @@ const LoginScreen = () => {
   };
 
   return (
-    <div>
+    <div className={styles.loginScreen}>
+      <h1>Pokimint</h1>
       <DynamicWidget />
     </div>
   );

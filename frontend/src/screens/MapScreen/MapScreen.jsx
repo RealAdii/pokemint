@@ -6,14 +6,43 @@ import styles from "./MapScreen.module.css";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { SJD_DEFAULT_LOCATION } from "../../utils/constants";
 import { coinsData } from "../../utils/coins-data";
+import { calculateDistance } from "../../utils/calculateDistance";
 
 const MapScreen = () => {
   const [currentPosition, setCurrentPosition] = useState(SJD_DEFAULT_LOCATION);
+  const [nearestCoinWithinRange, setNearestCoinWithinRange] = useState(null);
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const userModelRef = useRef(null);
 
+  console.log({ currentPosition });
+
   const navigate = useNavigate();
+
+  const findNearestCoinWithinRange = ({ latitude, longitude }) => {
+    let nearestCoin = null;
+    let shortestDistance = Infinity;
+
+    coinsData.forEach((coin) => {
+      const distance = calculateDistance(
+        latitude,
+        longitude,
+        coin.latitude,
+        coin.longitude
+      );
+
+      if (distance <= 100 && distance < shortestDistance) {
+        shortestDistance = distance;
+        nearestCoin = { ...coin, distance };
+      }
+    });
+
+    if (nearestCoin) {
+      setNearestCoinWithinRange(nearestCoin);
+    }
+
+    return nearestCoin;
+  };
 
   const handleDeviceMotion = (event) => {
     const tiltLR = event.gamma;
@@ -116,7 +145,6 @@ const MapScreen = () => {
               el.style.cursor = "pointer";
               // console.log(cData.symbol);
               if (cData.symbol === "BossBaby") {
-                console.log("BossBaby");
                 el.style.backgroundImage =
                   "url(https://firebasestorage.googleapis.com/v0/b/bgc-inside-out.appspot.com/o/pokemint%2Fboss-modified.png?alt=media&token=5189e619-9001-40ea-a777-d97cfed213e7)";
               } else if (cData.symbol === "@ADII") {
@@ -147,6 +175,10 @@ const MapScreen = () => {
           (position) => {
             const { longitude, latitude, heading } = position.coords;
             setCurrentPosition({ latitude, longitude });
+            findNearestCoinWithinRange({
+              latitude,
+              longitude,
+            });
             // checkNearestCoin(latitude, longitude);
 
             if (userModelRef.current) {
@@ -185,6 +217,10 @@ const MapScreen = () => {
             longitude: position.coords.longitude,
             latitude: position.coords.latitude,
           });
+          findNearestCoinWithinRange({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
         },
         (error) => {
           clearTimeout(locationTimeout);
@@ -206,9 +242,21 @@ const MapScreen = () => {
     };
   }, []);
 
+  const handleCollectCoin = () => {
+    if (nearestCoinWithinRange) {
+      navigate("/collect-coin", { state: { coin: nearestCoinWithinRange } });
+    }
+  };
+
   return (
     <div className={styles.mapScreen} ref={mapContainerRef}>
-      MapScreen
+      <button
+        disabled={!nearestCoinWithinRange}
+        className={styles.collectCoinButton}
+        onClick={handleCollectCoin}
+      >
+        Collect Coin
+      </button>
     </div>
   );
 };

@@ -1,0 +1,71 @@
+.container {
+  width: 100vw;
+  height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  background-image: linear-gradient(192deg, #fefeff, #1651f0);
+  gap: 50px;
+  padding: 20px;
+}
+
+.arOuterContainer {
+  box-sizing: border-box;
+  width: 80vw;
+  height: 400px;
+}
+
+.arInnerContainer {
+  width: 80vw;
+  height: 400px;
+  overflow: hidden;
+  position: relative;
+  border-radius: 15px;
+  border: 4px solid #1651f0;
+}
+
+.arButtonsContainer {
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.arButton {
+  background-color: #fff;
+  color: #1651f0;
+  border: none;
+  padding: 10px 40px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.collectButton {
+  background-color: #1651f0 !important;
+  color: #fff !important;
+}
+
+.loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.1);
+  z-index: 100;
+  backdrop-filter: blur(2px);
+}
+
+.loading p {
+  font-size: 1.5rem;
+  font-weight: 600;
+}

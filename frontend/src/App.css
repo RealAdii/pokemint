@@ -6,3 +6,9 @@
   text-align: center;
   box-sizing: border-box;
 }
+
+video {
+  visibility: hidden;
+  height: 1px;
+  width: 1px;
+}

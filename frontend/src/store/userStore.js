@@ -2,10 +2,10 @@
 import { create } from "zustand";
 
 const userStore = create((set) => ({
-  user: null,
-  setUserDetails: (user) => set(() => ({ user })),
+  userDetails: null,
+  setUserDetails: (user) => set(() => ({ userDetails: user })),
   updateUserDetails: (user) =>
-    set((state) => ({ user: { ...state.user, ...user } })),
+    set((state) => ({ userDetails: { ...state.userDetails, ...user } })),
 }));
 
 export default userStore;
