@@ -1,33 +1,61 @@
-const blockchainService = require("../services/blockchainService");
+import {
+  createTask,
+  completeTask,
+  getTask,
+} from "../services/blockchainService.js";
+import { updateUser } from "../models/userModel.js";
+import admin from "firebase-admin";
+const { firestore } = admin;
 
-async function createTask(req, res) {
+export async function createTaskHandler(req, res) {
   try {
     const { token, recipient, amount } = req.body;
-    const txHash = await blockchainService.createTask(token, recipient, amount);
+    console.log("token", token);
+    console.log("recipient", recipient);
+    console.log("amount", amount);
+
+    if (!token || !recipient || !amount) {
+      return res
+        .status(400)
+        .send({ success: false, error: "Fields are required" });
+    }
+
+    const txHash = await createTask(token, recipient, amount);
+    console.log("txHash", txHash);
     res.status(201).send({ success: true, transactionHash: txHash });
   } catch (error) {
     res.status(500).send({ success: false, error: error.message });
   }
 }
 
-async function completeTask(req, res) {
+export async function completeTaskHandler(req, res) {
   try {
-    const { taskId } = req.body;
-    const txHash = await blockchainService.completeTask(taskId);
+    const { taskId, coinDetails, uploadUrl, userId } = req.body;
+    const txHash = await completeTask(taskId);
+    await updateUser(userId, {
+      isVerified: true,
+      coinsCollectedDetails: firestore.FieldValue.arrayUnion({
+        taskId,
+        txHash: `${txHash}` ?? "",
+        coinDetails,
+        uploadUrl,
+      }),
+      coinsCollectedTotal: firestore.FieldValue.increment(1),
+    });
     res.status(200).send({ success: true, transactionHash: txHash });
   } catch (error) {
+    console.log("error", error);
     res.status(500).send({ success: false, error: error.message });
   }
 }
 
-async function getTask(req, res) {
+export async function getTaskHandler(req, res) {
   try {
     const { taskId } = req.params;
-    const taskDetails = await blockchainService.getTask(taskId);
+    console.log("taskId", taskId);
+    const taskDetails = await getTask(taskId);
     res.status(200).send({ success: true, task: taskDetails });
   } catch (error) {
     res.status(500).send({ success: false, error: error.message });
   }
 }
-
-export default { createTask, completeTask, getTask };

@@ -1,14 +1,14 @@
 import { Router } from "express";
 import {
-  createTask,
-  completeTask,
-  getTask,
-} from "../controllers/escrowController";
+  createTaskHandler,
+  completeTaskHandler,
+  getTaskHandler,
+} from "../controllers/escrowController.js";
 
 const router = Router();
 
-router.post("/create-task", createTask);
-router.post("/complete-task", completeTask);
-router.get("/get-task/:taskId", getTask);
+router.post("/create-task", createTaskHandler);
+router.post("/complete-task", completeTaskHandler);
+router.get("/get-task/:taskId", getTaskHandler);
 
 export default router;

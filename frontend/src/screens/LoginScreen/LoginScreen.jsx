@@ -4,16 +4,14 @@ import { DynamicWidget, useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { BACKEND_API_URL } from "../../utils/constants";
 import styles from "./LoginScreen.module.css";
 
-const LoginScreen = ({ userData, setUserData }) => {
-  const [loading, setLoading] = useState(false);
+const LoginScreen = () => {
   const { user } = useDynamicContext();
 
   const navigate = useNavigate();
+  console.log({ user });
 
-  console.log({ userData });
   useEffect(() => {
     if (user) {
-      setUserData(user);
       if (user?.newUser) {
         registerUser(user);
       }
@@ -24,7 +22,7 @@ const LoginScreen = ({ userData, setUserData }) => {
 
   const registerUser = async (userData) => {
     try {
-      setLoading(true);
+      // setLoading(true);
       const payload = {
         firstName: userData?.firstName || "",
         lastName: userData?.lastName || "",
@@ -48,16 +46,17 @@ const LoginScreen = ({ userData, setUserData }) => {
 
       const result = await response.json();
       console.log({ result });
+      navigate("/find-coin");
     } catch (error) {
       console.log({ error });
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
   return (
     <div className={styles.loginScreen}>
-      <h1>Pokimint</h1>
+      <h1 className="text-6xl font-bold text-blue-600">Pokimint</h1>
       <DynamicWidget />
     </div>
   );

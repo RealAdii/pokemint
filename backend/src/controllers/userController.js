@@ -1,4 +1,9 @@
-import { addUser, getUserDetails } from "../models/userModel.js";
+import {
+  addUser,
+  getUserDetails,
+  verifyUser,
+  verifyUserExists,
+} from "../models/userModel.js";
 
 export async function createUser(req, res) {
   try {
@@ -18,12 +23,12 @@ export async function createUser(req, res) {
       createdAt: Date.now(),
     };
 
-    const existingUser = await getUserDetails(userId);
-    if (existingUser) {
+    const userExists = await verifyUserExists(userId);
+    if (userExists.success) {
       return res.status(201).send({
         success: true,
         message: "User already exists",
-        userData: existingUser,
+        userData: userExists.data,
       });
     }
 
@@ -47,5 +52,17 @@ export async function getUser(req, res) {
     res.status(200).send({ success: true, data: userData });
   } catch (error) {
     res.status(404).send({ success: false, error: error.message });
+  }
+}
+
+export async function verifyUserHandler(req, res) {
+  try {
+    const { userId } = req.params;
+    await verifyUser(userId);
+    res
+      .status(200)
+      .send({ success: true, message: "User verified successfully" });
+  } catch (error) {
+    res.status(500).send({ success: false, error: error.message });
   }
 }

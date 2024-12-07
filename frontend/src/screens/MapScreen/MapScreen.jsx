@@ -7,6 +7,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { SJD_DEFAULT_LOCATION } from "../../utils/constants";
 import { coinsData } from "../../utils/coins-data";
 import { calculateDistance } from "../../utils/calculateDistance";
+import { DynamicWidget } from "@dynamic-labs/sdk-react-core";
 
 const MapScreen = () => {
   const [currentPosition, setCurrentPosition] = useState(SJD_DEFAULT_LOCATION);
@@ -250,6 +251,9 @@ const MapScreen = () => {
 
   return (
     <div className={styles.mapScreen} ref={mapContainerRef}>
+      <div className={styles.mapScreenHeader}>
+        <DynamicWidget />
+      </div>
       <button
         disabled={!nearestCoinWithinRange}
         className={styles.collectCoinButton}

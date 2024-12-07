@@ -3,6 +3,9 @@ import { config } from "dotenv";
 import cors from "cors";
 import userRoutes from "./src/routes/userRoutes.js";
 import escrowRoutes from "./src/routes/escrowRoutes.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // Initialize environment variables
 config();

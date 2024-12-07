@@ -1,19 +1,167 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Entity, Scene } from "aframe-react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ReclaimProofRequest } from "@reclaimprotocol/js-sdk";
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import styles from "./CollectCoin.module.css";
+import { BACKEND_API_URL } from "../../utils/constants";
+import { getDownloadURL, ref, uploadString } from "firebase/storage";
+import { storage } from "../../../firebase";
 
 const CollectCoin = () => {
-  const [loading, setLoading] = useState(false);
+  const { user } = useDynamicContext();
+  const fetchedUserData = useRef(null);
+  const transactionTaskId = useRef(null);
+
+  console.log({ user, transactionTaskId });
+
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = useState({ value: false, message: "" });
   const [clickedImage, setClickedImage] = useState({
     visible: false,
     url: null,
   });
 
+  useEffect(() => {
+    if (user && !fetchedUserData.current) {
+      getUserDataFromDB(user?.userId);
+    }
+  }, [user]);
+
+  const getUserDataFromDB = async (userId) => {
+    try {
+      setLoading({ value: true, message: "Fetching user data..." });
+      const response = await fetch(
+        `${BACKEND_API_URL}/users/get-user/${userId}`
+      );
+      const data = await response.json();
+      console.log({ data, response });
+      fetchedUserData.current = data?.data || null;
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading({ value: false, message: "" });
+    }
+  };
+
+  const verifyUser = async (userId) => {
+    try {
+      setLoading({ value: true, message: "Verifying user..." });
+      const response = await fetch(
+        `${BACKEND_API_URL}/users/verify-user/${userId}`
+      );
+      const data = await response.json();
+      console.log({ data, response });
+      fetchedUserData.current = {
+        ...fetchedUserData.current,
+        isVerified: true,
+      };
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading({ value: false, message: "" });
+    }
+  };
+
+  const holdMoneyInEscrow = async () => {
+    try {
+      setLoading({ value: true, message: "Holding money in wallet..." });
+      const payload = {
+        token:
+          coin?.tokenAddress ?? "0xB47c748CBe68Efcc918439ED5367a225cF3937a9",
+        recipient:
+          user?.verifiedCredentials?.[0]?.address ??
+          "0xd2C475236F53209AE8AD2595B0e68475f9cB7881",
+        amount: 999999,
+      };
+      console.log({ payload });
+      const response = await fetch(`${BACKEND_API_URL}/escrow/create-task`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      transactionTaskId.current = data?.transactionHash?.taskId;
+    } catch (error) {
+      console.log(error);
+      alert("Something went wrong");
+    } finally {
+      setLoading({ value: false, message: "" });
+    }
+  };
+
+  let coinImageUrl =
+    "https://firebasestorage.googleapis.com/v0/b/bgc-inside-out.appspot.com/o/memego%2Fsize.svg?alt=media&token=aaf15c74-dfad-4299-a446-8682456d3e27";
+
   const coin = useLocation().state?.coin;
   console.log({ coin });
 
+  if (coin?.symbol === "BossBaby") {
+    coinImageUrl =
+      "https://firebasestorage.googleapis.com/v0/b/bgc-inside-out.appspot.com/o/pokemint%2Fboss-modified.png?alt=media&token=5189e619-9001-40ea-a777-d97cfed213e7";
+  } else if (coin?.symbol === "ADII") {
+    coinImageUrl =
+      "https://firebasestorage.googleapis.com/v0/b/bgc-inside-out.appspot.com/o/pokemint%2Fadii-modified.png?alt=media&token=a7ea7788-23a5-4d19-8fad-4044c1347a42";
+  } else if (coin?.symbol === "SJD") {
+    coinImageUrl =
+      "https://firebasestorage.googleapis.com/v0/b/bgc-inside-out.appspot.com/o/pokemint%2Fsjd-modified.png?alt=media&token=0f72877f-d4a2-449f-9fac-8c173a3e5cce";
+  }
+
   const arContainerRef = useRef(null);
+
+  const getVerificationReq = async () => {
+    // Your credentials from the Reclaim Developer Portal
+    // Replace these with your actual credentials
+    console.log("here....");
+    const APP_ID = import.meta.env.VITE_RECLAIM_APP_ID;
+    const APP_SECRET = import.meta.env.VITE_RECLAIM_APP_SECRET;
+    const PROVIDER_ID = import.meta.env.VITE_RECLAIM_PROVIDER_ID;
+
+    // Initialize the Reclaim SDK with your credentials
+    const reclaimProofRequest = await ReclaimProofRequest.init(
+      APP_ID,
+      APP_SECRET,
+      PROVIDER_ID
+    );
+
+    // Generate the verification request URL
+    const requestUrl = await reclaimProofRequest.getRequestUrl();
+    console.log("Request URL:", requestUrl);
+    setLoading({ value: true, message: "Waiting for verification..." });
+    window.open(requestUrl, "_blank", "noopener,noreferrer");
+
+    // Start listening for proof submissions
+    await reclaimProofRequest.startSession({
+      // Called when the user successfully completes the verification
+      onSuccess: async (proofs) => {
+        if (proofs) {
+          if (typeof proofs === "string") {
+            // When using a custom callback url, the proof is returned to the callback url and we get a message instead of a proof
+            console.log("SDK Message:", proofs);
+          } else if (typeof proofs !== "string") {
+            // When using the default callback url, we get a proof object in the response
+            console.log("Verification success", proofs?.claimData.context);
+          }
+        }
+        setLoading({ value: false, message: "" });
+        await verifyUser(user?.userId);
+        alert("You can now collect the coin");
+        // Add your success logic here, such as:
+        // - Updating UI to show verification success
+        // - Storing verification status
+        // - Redirecting to another page
+      },
+      // Called if there's an error during verification
+      onError: (error) => {
+        console.error("Verification failed", error);
+        setLoading({ value: false, message: "" });
+        alert("something went wrong...");
+      },
+    });
+  };
 
   const resizeCanvas = (origCanvas, width, height) => {
     let resizedCanvas = document.createElement("canvas");
@@ -82,9 +230,17 @@ const CollectCoin = () => {
 
       frame = frame.dataUri;
 
-      mergeImages([frame, aScene]).then((b64) => {
+      mergeImages([frame, aScene]).then(async (b64) => {
         setClickedImage({ visible: true, url: b64 });
-        setLoading(false);
+        console.log({ fetchedUserData: fetchedUserData.current }, "???");
+        if (!fetchedUserData.current?.isVerified) {
+          alert(
+            "Your coin has been kept on hold and it's safe. Please verify your account to collect the coin"
+          );
+        } else {
+          alert("You are already verified, you can collect the coin directly");
+        }
+        await holdMoneyInEscrow();
         console.log({ b64 });
       });
 
@@ -102,59 +258,63 @@ const CollectCoin = () => {
   };
 
   const handleUpload = async () => {
-    // try {
-    //   setLoading(true);
-    //   const url = `memego/${coin}.png`;
-    //   const storageRef = ref(storage, url);
-    //   const uploadData = await uploadString(
-    //     storageRef,
-    //     clickedImage.url,
-    //     "data_url"
-    //   );
-    //   const uploadedUrl = await getDownloadURL(uploadData.ref);
-    //   const payload = {
-    //     lat: coin?.latitude,
-    //     lng: coin?.longitude,
-    //     id: coin?.id,
-    //     coinType: coin?.name,
-    //     uploadUrl: uploadedUrl,
-    //     walletAddress: walletAddress,
-    //   };
-    //   console.log({ payload }, "???");
-    //   const response = await fetch(`https://memego.onrender.com/api/contract`, {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify(payload),
-    //   });
-    //   const result = await response.json();
-    //   console.log({ result, response });
-    //   if (response.status !== 200) {
-    //     throw new Error(result.message);
-    //   }
-    //   alert("Coin Claimed Successfully");
-    //   setUploading(false);
-    //   navigate("/dashboard");
-    // } catch (error) {
-    //   console.log(error);
-    //   alert("Something went wrong");
-    //   setUploading(false);
-    // }
+    try {
+      setLoading({
+        value: true,
+        message: "Uploading image and claiming coin...",
+      });
+      const url = `pokemint/${coin?.coinId ?? Date.now()}-${Date.now()}.png`;
+      const storageRef = ref(storage, url);
+      const uploadData = await uploadString(
+        storageRef,
+        clickedImage.url,
+        "data_url"
+      );
+      const uploadedUrl = await getDownloadURL(uploadData.ref);
+      const payload = {
+        coinDetails: coin ?? {},
+        uploadUrl: uploadedUrl,
+        walletAddress: user?.verifiedCredentials?.[0]?.address,
+        taskId: transactionTaskId.current,
+        userId: user?.userId,
+      };
+      console.log({ payload }, "???");
+      const response = await fetch(`${BACKEND_API_URL}/escrow/complete-task`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      console.log({ result, response });
+      if (response.status !== 200) {
+        throw new Error(result.message);
+      }
+      alert("Coin Claimed Successfully");
+
+      navigate("/dashboard");
+    } catch (error) {
+      console.log(error);
+      alert("Something went wrong");
+      setLoading({ value: false, message: "" });
+    }
   };
 
   return (
     <div className={styles.container}>
-      {loading && (
+      {loading.value && (
         <div className={styles.loading}>
           <img
             src={"../../assets/loading.gif"}
             alt="loading"
             style={{ width: "100px", height: "100px" }}
           />
-          <p>Sending coin to your wallet...</p>
+          <p>{loading?.message || ""}</p>
+          <p>Please wait...</p>
         </div>
       )}
+
       <div className={styles.arOuterContainer}>
         <div
           className={`${styles.arInnerContainer} ar-container`}
@@ -169,9 +329,7 @@ const CollectCoin = () => {
               <Entity primitive="a-assets">
                 <img
                   id="logo1"
-                  src={
-                    "https://firebasestorage.googleapis.com/v0/b/bgc-inside-out.appspot.com/o/memego%2Fsize.svg?alt=media&token=aaf15c74-dfad-4299-a446-8682456d3e27"
-                  }
+                  src={coinImageUrl}
                   preload="auto"
                   crossOrigin="anonymous"
                 />
@@ -218,12 +376,21 @@ const CollectCoin = () => {
             >
               Discard
             </button>
-            <button
-              className={`${styles.arButton} ${styles.collectButton}`}
-              onClick={handleUpload}
-            >
-              Collect Coin
-            </button>
+            {fetchedUserData.current?.isVerified ? (
+              <button
+                className={`${styles.arButton} ${styles.collectButton}`}
+                onClick={handleUpload}
+              >
+                Collect Coin
+              </button>
+            ) : (
+              <button
+                className={`${styles.arButton} ${styles.collectButton}`}
+                onClick={getVerificationReq}
+              >
+                Verify Yourself
+              </button>
+            )}
           </>
         ) : (
           <button className={`${styles.arButton}`} onClick={captureImage}>
