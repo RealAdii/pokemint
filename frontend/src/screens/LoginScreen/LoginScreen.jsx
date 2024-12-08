@@ -1,24 +1,53 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { DynamicWidget, useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import {
+  DynamicWidget,
+  useDynamicContext,
+  useEmbeddedWallet,
+} from "@dynamic-labs/sdk-react-core";
 import { BACKEND_API_URL } from "../../utils/constants";
 import styles from "./LoginScreen.module.css";
+import {
+  BossBabyTokenDetails,
+  SJDxGoblinTokenDetails,
+  ADIITokenDetails,
+} from "../../utils/token-details";
 
 const LoginScreen = () => {
   const { user } = useDynamicContext();
+  const { addCustomToken } = useEmbeddedWallet();
+  const requestDone = useRef(false);
 
   const navigate = useNavigate();
   console.log({ user });
 
+  console.log(useEmbeddedWallet(), "waa");
+
   useEffect(() => {
-    if (user) {
+    if (user && !requestDone.current) {
       if (user?.newUser) {
         registerUser(user);
+        // addTokenToWallet();
       }
-
+      // addTokenToWalletHandler();
       navigate("/find-coin");
     }
-  }, [user]);
+  }, [user, requestDone]);
+
+  const addTokenToWalletHandler = async () => {
+    try {
+      console.log("Adding tokens to wallet", requestDone.current);
+      if (requestDone.current) return;
+      await addCustomToken(BossBabyTokenDetails);
+      await addCustomToken(SJDxGoblinTokenDetails);
+      const result = await addCustomToken(ADIITokenDetails);
+      console.log({ result });
+      console.log("Tokens added to wallet");
+      requestDone.current = true;
+    } catch (error) {
+      console.log({ error });
+    }
+  };
 
   const registerUser = async (userData) => {
     try {

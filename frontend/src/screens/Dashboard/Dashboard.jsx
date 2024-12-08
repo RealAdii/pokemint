@@ -1,5 +1,7 @@
 import React from "react";
 import { Trophy, Users, Coins } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import styles from "./Dashboard.module.css";
 
 // Mock Data
 const players = [
@@ -157,6 +159,7 @@ function LeaderboardRow({ player }) {
 }
 
 function Leaderboard() {
+  const navigate = useNavigate();
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <div className="text-center mb-8">
@@ -171,6 +174,12 @@ function Leaderboard() {
           <LeaderboardRow key={player.id} player={player} />
         ))}
       </div>
+      <button
+        className={styles.findCoinButton}
+        onClick={() => navigate("/find-coin")}
+      >
+        Find Coin
+      </button>
     </div>
   );
 }

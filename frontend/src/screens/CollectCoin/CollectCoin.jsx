@@ -291,9 +291,11 @@ const CollectCoin = () => {
       if (response.status !== 200) {
         throw new Error(result.message);
       }
-      alert("Coin Claimed Successfully");
+      alert(
+        `Coin Claimed Successfully, Transaction Hash: ${result?.transactionHash?.hash}`
+      );
 
-      navigate("/dashboard");
+      navigate("/leaderboard");
     } catch (error) {
       console.log(error);
       alert("Something went wrong");

@@ -20,6 +20,10 @@ app.use(express.json());
 app.use("/api/users", userRoutes);
 app.use("/api/escrow", escrowRoutes);
 
+app.get("/", (req, res) => {
+  res.send("Hello World From Backend");
+});
+
 // Server Start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

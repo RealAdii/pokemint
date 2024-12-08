@@ -1,0 +1,13 @@
+.findCoinButton {
+  position: fixed;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1651f0;
+  color: #fff;
+  border: none;
+  padding: 10px 40px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+}

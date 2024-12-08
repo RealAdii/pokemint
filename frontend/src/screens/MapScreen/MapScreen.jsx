@@ -261,6 +261,12 @@ const MapScreen = () => {
       >
         Collect Coin
       </button>
+      <button
+        className={styles.leaderboardButton}
+        onClick={() => navigate("/leaderboard")}
+      >
+        Leaderboard
+      </button>
     </div>
   );
 };

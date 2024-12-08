@@ -21,7 +21,7 @@ function App() {
             <Route path="/" element={<LoginScreen />} />
             <Route path="/find-coin" element={<MapScreen />} />
             <Route path="/collect-coin" element={<CollectCoin />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/leaderboard" element={<Dashboard />} />
             {/* <Route path="*" element={<NotFound />} /> 404 page for unmatched routes */}
           </Routes>
         </Router>

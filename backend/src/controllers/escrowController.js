@@ -36,7 +36,7 @@ export async function completeTaskHandler(req, res) {
       isVerified: true,
       coinsCollectedDetails: firestore.FieldValue.arrayUnion({
         taskId,
-        txHash: `${txHash}` ?? "",
+        txHash: `${txHash?.hash}` ?? "",
         coinDetails,
         uploadUrl,
       }),
